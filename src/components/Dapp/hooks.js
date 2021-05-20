@@ -174,12 +174,17 @@ export function useRest(web3,accounts, contract, restInfo) {
 
         console.log("REST CALL [OneWay]", rest, apiResult)
         if (apiResult && rest && rest['callbackFn']) {
+            const startTime = new Date();
+            console.log("** [TIME REQ 1 OneWay]:", startTime);
             const method = `${rest['callbackFn']}`
             contract.methods[`${method}`]().send({
                 // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
                 from:accounts[0],
                 gas: 9000000,
             }).then((result) => {
+                const endTime = new Date();
+                console.log("** [TIME REQ  1 OneWay]:", endTime);
+                console.log("** [TIME REQ  OneWay ElsapedTime] ",endTime-startTime);
                 setCallbackReturnValue(result);
             }).catch(function (err, jj) {
                 notification['error']({
@@ -195,12 +200,17 @@ export function useRest(web3,accounts, contract, restInfo) {
         console.log("REST CALL [TwoWay]", rest, apiResult)
         if (apiResult && rest && rest['callbackFn']) {
             const method = `${rest['callbackFn']}`
+            const startTime = new Date();
+            console.log("** [TIME REQ 1 TwoWay]:", startTime);
             ipfsMini.add(JSON.stringify(apiResult)).then((resp) => {
                 contract.methods[`${method}`](resp).send({
                     // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
                     from: accounts[0],
                     gas: 9000000,
                 }).then((result) => {
+                    const endTime = new Date();
+                    console.log("** [TIME REQ  1 TwoWay]:", endTime);
+                    console.log("** [TIME REQ  TwoWay  ElsapedTime] ",endTime-startTime);
                     setCallbackReturnValue(result);
                 }).catch(function (err, jj) {
                     notification['error']({

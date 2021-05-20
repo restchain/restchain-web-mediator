@@ -27,10 +27,6 @@ export function Routes() {
     // });
     return (
         <Switch>
-            <PrivateRoute path="/deploy/:id" component={Deploy}/>
-            <PrivateRoute path="/deploy" component={Deploy}/>
-            <PrivateRoute path="/design/:id" component={Modeler}/>
-            <PrivateRoute path="/design" component={Modeler}/>
             <PrivateRoute path="/dapp/:id" component={ContractLoader}/>
             <PrivateRoute path="/dapp" component={Dapp}/>
             <Route path="/login">

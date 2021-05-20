@@ -53,8 +53,6 @@ export function AppHeader() {
                 style={{lineHeight: '64px'}}
             >
                 <Menu.Item key=""><Link to="/">Home</Link></Menu.Item>
-                <Menu.Item key="/design"><Link to="/design">Choreography Design</Link></Menu.Item>
-                <Menu.Item key="/deploy"><Link to="/deploy">Choreography Deploy</Link></Menu.Item>
                 <Menu.Item key="/dapp"><Link to="/dapp">Choreography Dapp Interaction</Link></Menu.Item>
 
             </Menu>
