@@ -57,7 +57,8 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
         // console.log("callFunction ", _props);
         const inputs = []
         const sortedProps = Object.keys(_props).sort().forEach(key => inputs.push(_props[key]))
-
+        const startTime = new Date();
+        console.log("** [TIME REQ ("+normalizedId+")]:", startTime);
         //console.log("callFunction  Object.values(_props)", inputs, account);
         contract.methods[`${normalizedId}`].apply(this, inputs).send({
             // contract.methods._sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
@@ -65,6 +66,9 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
             gas: 9000000,
         }).then((result) => {
             // console.log("callFunction result ", JSON.stringify(result));         ù
+            const endTime = new Date();
+            console.log("** [TIME REQ  ("+normalizedId+")]:", endTime);
+            console.log("** [TIME REQ  ("+normalizedId+")] - ElapsedTime: ",endTime-startTime);
             setState({
                 response: result
             });
@@ -82,12 +86,17 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
 
     const callPayableFunction = async (_props) => {
         var newAmount = web3.utils.toWei(11, 'ether');
+        const startTime = new Date();
+        console.log("** [TIME REQ  ("+normalizedId+")]:", startTime);
         contract.methods[`${normalizedId}`].apply(this, Object.values(_props)).send({
             // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
             from: account,
             value: newAmount,
             gas: 200000,
         }).then((result) => {
+            const endTime = new Date();
+            console.log("** [TIME REQ  ("+normalizedId+")]:", endTime);
+            console.log("** [TIME REQ  ("+normalizedId+")] - Elapsed Time :",endTime-startTime);
             //console.log("result ", JSON.stringify(result));
             setState({
                 response: result

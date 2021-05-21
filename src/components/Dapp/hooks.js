@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import * as _ from "lodash";
 import axios from "axios";
 import {message, notification} from "antd";
@@ -24,7 +24,7 @@ export function useListenEvents(contract) {
             if (error)
                 alert("error while subscribing to event")
             if (event) {
-                console.debug("[Event] - ", event.event ,  event.returnValues)
+                console.debug("[Event] - ", event.event, event.returnValues)
                 if (event.event === "stateChanged") {
                     setEventSign(event.signature);
                     setEvent(event);
@@ -36,10 +36,10 @@ export function useListenEvents(contract) {
                 }
             }
         })
-    },[contract]);
+    }, [contract]);
 
 
-    return {eventSignature, restMethod,event}
+    return {eventSignature, restMethod, event}
 }
 
 
@@ -54,13 +54,11 @@ export function useListenEvents(contract) {
  */
 
 
-export function useRest(web3,accounts, contract, restInfo) {
+export function useRest(web3, accounts, contract, restInfo) {
     const [restReturnValue, setRestReturnValue] = useState(null);
     const [callbackReturnValue, setCallbackReturnValue] = useState(null);
-    const [{cid, loading, content : ipfsContent}, doCat, doAdd] = useIpfsCmd();
-    console.log("WEB3 ",web3)
-
-
+    const [{cid, loading, content: ipfsContent}, doCat, doAdd] = useIpfsCmd();
+    console.log("WEB3 ", web3)
 
 
     const handleRestInfo = async () => {
@@ -113,7 +111,7 @@ export function useRest(web3,accounts, contract, restInfo) {
                 setRestReturnValue(resp.data)
                 // console.log("REST API RESULT:", resp.data)
                 // console.log("LOG this  ", restReturnValue)
-                message.success('Endpoint '+restDetail.url+ ' successfully called ');
+                message.success('Endpoint ' + restDetail.url + ' successfully called ');
                 if (resp.data && restInfo.fnType === 'oneway') {
                     callContractCallbackOneway(restInfo, resp.data)
                 } else if (resp.data && restInfo.fnType === 'twoway') {
@@ -129,11 +127,11 @@ export function useRest(web3,accounts, contract, restInfo) {
 
     const callRestWithMethod = async () => {
         const restDetail = JSON.parse(ipfsContent);
-        console.log(" restDetail",restDetail);
+        console.log(" restDetail", restDetail);
         const callDefinition = {
             method: restDetail.method,
             url: restDetail.url,
-            params:  restDetail.params,
+            params: restDetail.params,
             data: restDetail.data,
         }
         axios(callDefinition)
@@ -143,15 +141,15 @@ export function useRest(web3,accounts, contract, restInfo) {
                 console.log("[callRestWithMethod] REST API RESULT:", resp.data)
                 console.log("[callRestWithMethod] LOG this  ", restReturnValue)
                 console.log("[callRestWithMethod] restInfo  ", restInfo)
-                message.success('Endpoint '+restDetail.url+ ' successfully called ',10);
+                message.success('Endpoint ' + restDetail.url + ' successfully called ', 10);
                 if (resp.data && restInfo.fnType === 'oneway') {
                     callContractCallbackOneway(restInfo, resp.data)
                 } else if (resp.data && restInfo.fnType === 'twoway') {
                     // controlla che l'account designato per il rientro in blockchain sia corretto
-                    if(accounts[0] === restInfo.id){
+                    if (accounts[0] === restInfo.id) {
                         callContractCallbackTwoway(restInfo, resp.data)
                     } else {
-                        console.log(" ** Drop REST CALL because account not allowed ** - account:",accounts[0])
+                        console.log(" ** Drop REST CALL because account not allowed ** - account:", accounts[0])
                     }
                 }
             });
@@ -163,7 +161,7 @@ export function useRest(web3,accounts, contract, restInfo) {
         () => {
             // Se cè contenuto IPFS allora invoca il REST dopo aver aperto il contenuto
             if (ipfsContent) {
-                console.log("ipfsContent ",ipfsContent)
+                console.log("ipfsContent ", ipfsContent)
                 callRestWithMethod();
             }
         }
@@ -175,16 +173,16 @@ export function useRest(web3,accounts, contract, restInfo) {
         console.log("REST CALL [OneWay]", rest, apiResult)
         if (apiResult && rest && rest['callbackFn']) {
             const startTime = new Date();
-            console.log("** [TIME REQ 1 OneWay]:", startTime);
+            console.log("** [TIME RESP (" + method + ") ] (OneWay):", startTime);
             const method = `${rest['callbackFn']}`
             contract.methods[`${method}`]().send({
                 // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
-                from:accounts[0],
+                from: accounts[0],
                 gas: 9000000,
             }).then((result) => {
                 const endTime = new Date();
-                console.log("** [TIME REQ  1 OneWay]:", endTime);
-                console.log("** [TIME REQ  OneWay ElsapedTime] ",endTime-startTime);
+                console.log("** [TIME RESP (" + method + "))] (OneWay):", endTime);
+                console.log("** [TIME RESP (" + method + ")] (OneWay) - ElapsedTime  ", endTime - startTime);
                 setCallbackReturnValue(result);
             }).catch(function (err, jj) {
                 notification['error']({
@@ -201,7 +199,7 @@ export function useRest(web3,accounts, contract, restInfo) {
         if (apiResult && rest && rest['callbackFn']) {
             const method = `${rest['callbackFn']}`
             const startTime = new Date();
-            console.log("** [TIME REQ 1 TwoWay]:", startTime);
+            console.log("** [TIME RESP (" + method + ")]:", startTime);
             ipfsMini.add(JSON.stringify(apiResult)).then((resp) => {
                 contract.methods[`${method}`](resp).send({
                     // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
@@ -209,8 +207,8 @@ export function useRest(web3,accounts, contract, restInfo) {
                     gas: 9000000,
                 }).then((result) => {
                     const endTime = new Date();
-                    console.log("** [TIME REQ  1 TwoWay]:", endTime);
-                    console.log("** [TIME REQ  TwoWay  ElsapedTime] ",endTime-startTime);
+                    console.log("** [TIME RESP (" + method + ")] (TwoWay):", endTime);
+                    console.log("** [TIME RESP (" + method + ")] (TwoWay) - ElapsedTime :", endTime - startTime);
                     setCallbackReturnValue(result);
                 }).catch(function (err, jj) {
                     notification['error']({
