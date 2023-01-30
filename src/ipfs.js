@@ -1,6 +1,6 @@
 // import ipfsApi from 'ipfs-http-client'
 
-import ipfsApiMini from 'ipfs-mini';
+import IpfsApiMini from 'ipfs-mini';
 
 // export const ipfsMini = new ipfsApiMini({ host: '127.0.0.1', port: 5001, protocol: 'http',base: '/api/v0'  });
 
@@ -11,7 +11,7 @@ import ipfsApiMini from 'ipfs-mini';
  * default { host: '127.0.0.1', port: 5001, protocol: 'http',base: '/api/v0'  }
  *
  */
-export const ipfsMini = new ipfsApiMini();
+export const ipfsMini = new IpfsApiMini();
 
 // connection to local IPFS daemon
 // export const IPFS  = ipfsApi('/ip4/127.0.0.1/tcp/5001');
