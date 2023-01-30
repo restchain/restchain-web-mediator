@@ -9,6 +9,7 @@ variables:
 
 
 build:
+  image: node:10-alpine
   stage: build
   cache:
     - key:
