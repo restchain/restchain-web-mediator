@@ -17,7 +17,7 @@ build:
       paths:
         - .yarn-cache/
   before_script:
-    - apk add --update git
+    - apk add --update git openssh-client
     - git config --global url.git://github.com/
   script:
     - echo "Compiling and installing the code..."
