@@ -1,5 +1,6 @@
 stages:
   - build
+  - publish
 
 variables:
   DOCKER_IIT_HOST: docker-registry.services.iit.cnr.it
