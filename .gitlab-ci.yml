@@ -7,8 +7,6 @@ variables:
   DOCKER_GROUP: chorchain
   DOCKER_IMAGE: ${DOCKER_IIT_HOST}/${DOCKER_GROUP}/${CI_PROJECT_NAME}
 
-apk add git
-
 build:
   image: node:10-alpine
   stage: build
