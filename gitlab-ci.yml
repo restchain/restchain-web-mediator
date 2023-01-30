@@ -1,12 +1,43 @@
-  server {
-    listen 80;
-    server_name _;
+stages:
+  - build
 
-    root /var/www/;
-    index index.html;
+variables:
+  DOCKER_IIT_HOST: docker-registry.services.iit.cnr.it
+  DOCKER_GROUP: chorchain
+  DOCKER_IMAGE: ${DOCKER_IIT_HOST}/${DOCKER_GROUP}/${CI_PROJECT_NAME}
 
-    # Force all paths to load either itself (js files) or go through index.html.
-    location / {
-    try_files $uri /index.html;
-    }
-  }
+
+build:
+  stage: build
+  cache:
+    - key:
+        files:
+          - yarn.lock
+      paths:
+        - .yarn-cache/
+  script:
+    - yarn install --cache-folder .yarn-cache
+    - yarn build
+
+#publish-master:
+#  stage: publish
+#  image: docker:stable
+#  script:
+#    - docker build ./ -t ${DOCKER_IMAGE}:latest
+#    - docker login -u "${IIT_REGISTRY_USER}" -p "${IIT_REGISTRY_PASSWORD}" $DOCKER_IIT_HOST
+#    - docker push ${DOCKER_IMAGE}:latest
+#  only:
+#    - master
+
+publish-tag:
+  stage: publish
+  image: docker:stable
+  script:
+    - docker build ./ -t ${DOCKER_IMAGE}:${CI_COMMIT_TAG}
+    - docker tag ${DOCKER_IMAGE}:${CI_COMMIT_TAG} ${DOCKER_IMAGE}:stable
+    - docker login -u "${IIT_REGISTRY_USER}" -p "${IIT_REGISTRY_PASSWORD}" $DOCKER_IIT_HOST
+    - docker push ${DOCKER_IMAGE}:${CI_COMMIT_TAG}
+    - docker push ${DOCKER_IMAGE}:stable
+  only:
+    - tags
+
