@@ -7,6 +7,7 @@ variables:
   DOCKER_GROUP: chorchain
   DOCKER_IMAGE: ${DOCKER_IIT_HOST}/${DOCKER_GROUP}/${CI_PROJECT_NAME}
 
+apk add git
 
 build:
   image: node:10-alpine
@@ -17,10 +18,13 @@ build:
           - yarn.lock
       paths:
         - .yarn-cache/
+  before_script:
+    - apk add --update git
   script:
+    - echo "Compiling and installing the code..."
     - yarn install --cache-folder .yarn-cache
     - yarn build
-
+    - echo "Compile complete."
 #publish-master:
 #  stage: publish
 #  image: docker:stable
