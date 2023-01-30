@@ -18,7 +18,7 @@ build:
         - .yarn-cache/
   before_script:
     - apk add --update git
-    - git config --global url.git://github.com/
+    - git config --global url."git@github.com:".insteadOf "https://github.com/"
   script:
     - echo "Compiling and installing the code..."
     - yarn install --cache-folder .yarn-cache
