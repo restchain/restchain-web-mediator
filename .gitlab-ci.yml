@@ -19,7 +19,7 @@ build:
   before_script:
     - apk add --update git
     - apk add --update git openssh-client
-    - git config --global url.git://github.com/
+    - git config --global url."git@github.com:".insteadOf "https://github.com/"
   script:
     - echo "Compiling and installing the code..."
     - yarn install --cache-folder .yarn-cache
