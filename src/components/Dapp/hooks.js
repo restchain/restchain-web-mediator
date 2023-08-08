@@ -126,13 +126,15 @@ export function useRest(web3, accounts, contract, restInfo) {
     }
 
     const callRestWithMethod = async () => {
-        const restDetail = JSON.parse(ipfsContent);
-        console.log(" restDetail", restDetail);
+        console.log(" ipfsContent", JSON.stringify(ipfsContent));
+        // const restDetail = JSON.parse(ipfsContent);
+        // console.log(" restDetail", restDetail);
+
         const callDefinition = {
-            method: restDetail.method,
-            url: restDetail.url,
-            params: restDetail.params,
-            data: restDetail.data,
+            method: ipfsContent?.method,
+            url: ipfsContent?.url,
+            params: ipfsContent?.params,
+            data: ipfsContent?.data,
         }
         axios(callDefinition)
             .then((resp) => {
@@ -141,7 +143,7 @@ export function useRest(web3, accounts, contract, restInfo) {
                 console.log("[callRestWithMethod] REST API RESULT:", resp.data)
                 console.log("[callRestWithMethod] LOG this  ", restReturnValue)
                 console.log("[callRestWithMethod] restInfo  ", restInfo)
-                message.success('Endpoint ' + restDetail.url + ' successfully called ', 10);
+                message.success('Endpoint ' + ipfsContent.url + ' successfully called ', 10);
                 if (resp.data && restInfo.fnType === 'oneway') {
                     callContractCallbackOneway(restInfo, resp.data)
                 } else if (resp.data && restInfo.fnType === 'twoway') {
@@ -173,12 +175,11 @@ export function useRest(web3, accounts, contract, restInfo) {
         console.log("REST CALL [OneWay]", rest, apiResult)
         if (apiResult && rest && rest['callbackFn']) {
             const startTime = new Date();
-            console.log("** [TIME RESP (" + method + ") ] (OneWay):", startTime);
             const method = `${rest['callbackFn']}`
+            console.log("** [TIME RESP (" + method + ") ] (OneWay):", startTime);
             contract.methods[`${method}`]().send({
                 // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
-                from: accounts[0],
-                gas: 9000000,
+                from: accounts[0]
             }).then((result) => {
                 const endTime = new Date();
                 console.log("** [TIME RESP (" + method + "))] (OneWay):", endTime);
@@ -240,7 +241,14 @@ export function useRest(web3, accounts, contract, restInfo) {
 export function useIpfsCall(id) {
     const [res, setRes] = useState();
     useEffect(() => {
-        id && ipfsMini.cat(id).then((resp) => setRes(resp))
+        id && axios.post("http://127.0.0.1:5001/api/v0/cat/" + id).then(
+            (resp) => {
+                if (resp) {
+                    console.log("useIpfsCall", JSON.stringify(resp))
+                    setRes(resp.data)
+                }
+            }
+        )
     }, [id])
     return res;
 }
@@ -289,8 +297,8 @@ export function useIpfsCmd() {
     useEffect(() => {
         if (cid) {
             setLoading(true)
-            ipfsMini.cat(cid).then((resp) => {
-                    setContent(resp);
+            axios.post("http://127.0.0.1:5001/api/v0/cat/" + cid).then((resp) => {
+                    setContent(resp.data);
                     setLoading(false);
                 }
             )
