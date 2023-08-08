@@ -21,7 +21,7 @@ import WrappedDynamicFieldDomainSet from "./DynamicFieldDomainSet";
 
 const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, viewer}) => {
 
-    //console.log("FunctionForm props", sid, contract, web3, canvas, viewer)
+    console.log("Callback FunctionForm props", sid, contract, web3, canvas, viewer)
     const _sid = sid.toString().replace("_resp", "");
 
     //console.log("Real Current ", sid)
@@ -62,13 +62,12 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
         //console.log("callFunction  Object.values(_props)", inputs, account);
         contract.methods[`${normalizedId}`].apply(this, inputs).send({
             // contract.methods._sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
-            from: account,
-            gas: 9000000,
+            from: account
         }).then((result) => {
             // console.log("callFunction result ", JSON.stringify(result));         ù
             const endTime = new Date();
-            console.log("** [TIME REQ  ("+normalizedId+")]:", endTime);
-            console.log("** [TIME REQ  ("+normalizedId+")] - ElapsedTime: ",endTime-startTime);
+            console.log("** [TIME REQ  (" + normalizedId + ")]:", endTime);
+            console.log("** [TIME REQ  (" + normalizedId + ")] - ElapsedTime: ", endTime - startTime);
             setState({
                 response: result
             });
@@ -91,12 +90,11 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
         contract.methods[`${normalizedId}`].apply(this, Object.values(_props)).send({
             // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
             from: account,
-            value: newAmount,
-            gas: 200000,
+            value: newAmount
         }).then((result) => {
             const endTime = new Date();
-            console.log("** [TIME REQ  ("+normalizedId+")]:", endTime);
-            console.log("** [TIME REQ  ("+normalizedId+")] - Elapsed Time :",endTime-startTime);
+            console.log("** [TIME REQ  (" + normalizedId + ")]:", endTime);
+            console.log("** [TIME REQ  (" + normalizedId + ")] - Elapsed Time :", endTime - startTime);
             //console.log("result ", JSON.stringify(result));
             setState({
                 response: result
@@ -198,112 +196,112 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
         {/*}*/}
         <Form onSubmit={handleSubmit}>
             {currentElement && currentElement.inputs && currentElement.inputs.length > 0 &&
-            <div style={{marginTop: '10px', border: '1px dashed black', padding: '10px'}}>
-                {
+                <div style={{marginTop: '10px', border: '1px dashed black', padding: '10px'}}>
+                    {
 
-                    currentElement.inputs.map(
-                        (currentBpmnElement, index) => {
-                            //TODO controllare il tipo e nel caso metter un controllo nel booolean
-                            // console.log("FunctionForm currentBpmnElement", currentBpmnElement, index)
-                            // Se l'elemento è del tipo _rcid o _rcbkid allora gestisci logica per le chiamate REST
-                            if (currentBpmnElement.name.includes('_rcid') || currentBpmnElement.name.includes('_rcbkid')) {
-                                // Se già è stato creato IPFS,
-                                if (ipfsId) {
+                        currentElement.inputs.map(
+                            (currentBpmnElement, index) => {
+                                //TODO controllare il tipo e nel caso metter un controllo nel booolean
+                                // console.log("FunctionForm currentBpmnElement", currentBpmnElement, index)
+                                // Se l'elemento è del tipo _rcid o _rcbkid allora gestisci logica per le chiamate REST
+                                if (currentBpmnElement.name.includes('_rcid') || currentBpmnElement.name.includes('_rcbkid')) {
+                                    // Se già è stato creato IPFS,
+                                    if (ipfsId) {
+                                        return (
+                                            <div key={index}>
+                                                <Form.Item label={currentBpmnElement.name}>
+                                                    {form.getFieldDecorator(currentElement.name, {
+                                                        initialValue: ipfsId,
+                                                        rules: [{
+                                                            required: true,
+                                                            message: 'Please fill the field ' + currentElement.name
+                                                        }],
+                                                    })(<Input disabled
+                                                              placeholder={`${currentElement.type} ${currentElement.name}`}/>)}
+                                                    {JSON.stringify(ipfsContent)}
+                                                </Form.Item>
+                                            </div>
+                                        )
+                                    }
+                                    // Se non esiste IpfsID mostra Form di craezione IPFS
                                     return (
                                         <div key={index}>
-                                            <Form.Item label={currentBpmnElement.name}>
-                                                {form.getFieldDecorator(currentElement.name, {
-                                                    initialValue: ipfsId,
-                                                    rules: [{
-                                                        required: true,
-                                                        message: 'Please fill the field ' + currentElement.name
-                                                    }],
-                                                })(<Input disabled
-                                                          placeholder={`${currentElement.type} ${currentElement.name}`}/>)}
-                                                {ipfsContent}
-                                            </Form.Item>
+                                            <IPFSForm onOk={(value) => setIpfsId(value)}/>
                                         </div>
                                     )
                                 }
-                                // Se non esiste IpfsID mostra Form di craezione IPFS
+
                                 return (
-                                    <div key={index}>
-                                        <IPFSForm onOk={(value) => setIpfsId(value)}/>
-                                    </div>
+                                    <Form.Item
+                                        key={index}
+                                        label={currentBpmnElement.name}>
+                                        {inputSelector(form, currentBpmnElement)}
+                                    </Form.Item>
                                 )
                             }
-
-                            return (
-                                <Form.Item
-                                    key={index}
-                                    label={currentBpmnElement.name}>
-                                    {inputSelector(form, currentBpmnElement)}
-                                </Form.Item>
-                            )
-                        }
-                    )
+                        )
                     }
-                    </div>
-                }
-                {/*<Form.Item>*/}
-                {/*<Button htmlType="submit" type='primary' disabled={!isParticipantAllowed()}>Send</Button>*/}
-                <Divider/>
-                <div style={{textAlign: 'center'}}><Button htmlType="submit" type='primary'>Send</Button></div>
-                {/*</Form.Item>*/}
-            </Form>
                 </div>
-                }
+            }
+            {/*<Form.Item>*/}
+            {/*<Button htmlType="submit" type='primary' disabled={!isParticipantAllowed()}>Send</Button>*/}
+            <Divider/>
+            <div style={{textAlign: 'center'}}><Button htmlType="submit" type='primary'>Send</Button></div>
+            {/*</Form.Item>*/}
+        </Form>
+    </div>
+}
 
-                const WrappedFunctionForm = Form.create({name: 'function_form'})(FunctionForm);
-                export default WrappedFunctionForm;
+const WrappedFunctionForm = Form.create({name: 'function_form'})(FunctionForm);
+export default WrappedFunctionForm;
 
 
-                /***
-                *
-                * @param form
-                * @param current
-                * @returns {React.ReactNode|*}
-                */
+/***
+ *
+ * @param form
+ * @param current
+ * @returns {React.ReactNode|*}
+ */
 
-                function inputSelector(form, current) {
-                //console.log("inputSelector Type ", current)
-                switch (current.type) {
-                case "uint256":
-                return <InputUint256 current={current} form={form}/>
-                case "bool":
-                return <InputBool current={current} form={form}/>
-                case "string":
-                return <InputString current={current} form={form}/>
-                case "bytes32[]":
-                return <WrappedDynamicFieldDomainSet current={current} form={form}/>
-                default:
-                return form.getFieldDecorator(current.name, {
+function inputSelector(form, current) {
+    //console.log("inputSelector Type ", current)
+    switch (current.type) {
+        case "uint256":
+            return <InputUint256 current={current} form={form}/>
+        case "bool":
+            return <InputBool current={current} form={form}/>
+        case "string":
+            return <InputString current={current} form={form}/>
+        case "bytes32[]":
+            return <WrappedDynamicFieldDomainSet current={current} form={form}/>
+        default:
+            return form.getFieldDecorator(current.name, {
                 rules: [{required: true, message: 'Required field!'}],
             })(<Input
                 placeholder={`${current.type} ${current.name}`}/>)
 
-            }
-            }
+    }
+}
 
-                function InputUint256({form, current}) {
-                return form.getFieldDecorator(current.name, {
-                rules: [{required: true, message: 'Please fill the field ' + current.name}],
-            })(<InputNumber
-                placeholder={`${current.type} ${current.name}`}/>)
-            }
+function InputUint256({form, current}) {
+    return form.getFieldDecorator(current.name, {
+        rules: [{required: true, message: 'Please fill the field ' + current.name}],
+    })(<InputNumber
+        placeholder={`${current.type} ${current.name}`}/>)
+}
 
-                function InputBool({form, current}) {
-                // console.log("ohhh ", form)
-                return form.getFieldDecorator(current.name, {
-                valuePropName: 'checked'
-            })(<Switch>Checkbox Text</Switch>)
-            }
+function InputBool({form, current}) {
+    // console.log("ohhh ", form)
+    return form.getFieldDecorator(current.name, {
+        valuePropName: 'checked'
+    })(<Switch>Checkbox Text</Switch>)
+}
 
 
-                function InputString({form, current}) {
-                return form.getFieldDecorator(current.name, {
-                rules: [{required: true, message: 'Please fill the field ' + current.name}],
+function InputString({form, current}) {
+    return form.getFieldDecorator(current.name, {
+        rules: [{required: true, message: 'Please fill the field ' + current.name}],
 
-            })(<Input
-                placeholder={`${current.type} ${current.name}`}/>)
-            }
+    })(<Input
+        placeholder={`${current.type} ${current.name}`}/>)
+}
