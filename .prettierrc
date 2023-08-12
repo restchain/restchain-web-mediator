@@ -1,0 +1,10 @@
+{
+  "bracketSpacing": true,
+  "singleQuote": true,
+  "printWidth": 80,
+  "trailingComma": "all",
+  "jsxBracketSameLine": false,
+  "parser": "typescript",
+  "organizeImports": true,
+  "tabWidth": 2
+}
