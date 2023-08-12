@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Card } from 'antd';
-import { createIpfsResponse, ipfsAdd, ipfsRead } from '../ipfsClient';
+import { ipfsAdd, ipfsAddWithLog, ipfsRead } from '../ipfsClient';
 import axios from 'axios';
 import { signTransaction } from '../signTransaction';
 
 function buildRestAxiosConfig(restApiUriContent) {
-  console.log('[buildRestAxiosConfig]', restApiUriContent);
+  // console.log('[buildRestAxiosConfig]', restApiUriContent);
   return {
     method: restApiUriContent?.method,
     url: restApiUriContent?.url,
@@ -14,19 +14,31 @@ function buildRestAxiosConfig(restApiUriContent) {
   };
 }
 
-const getRestApiUriContent = async (ipfsId) => {
+const getRestApiUriContent = async (ipfsId, text) => {
+  const startTime = new Date();
+
   try {
-    return await ipfsRead(ipfsId);
+    const resp = await ipfsRead(ipfsId);
+    const endTime = new Date();
+    console.log(`[IPFS READ] (${text}) - ElapsedTime: ${endTime - startTime} `);
+    return resp;
   } catch (err) {
     console.error('getApiUriContent error:', JSON.stringify(err));
   }
 };
 
-async function getRestResponse(axiosConfig) {
+async function getRestResponse(axiosConfig, text) {
+  const startTime = new Date();
+
   try {
-    return await axios(axiosConfig);
+    const resp = await axios(axiosConfig);
+    const endTime = new Date();
+    console.log(
+      `[REST RESPONSE] (${text}) - ElapsedTime: ${endTime - startTime} `,
+    );
+    return resp;
   } catch (err) {
-    console.error('getApiUriContent error:', JSON.stringify(err));
+    console.error('getRestResponse error:', JSON.stringify(err));
   }
 }
 
@@ -47,33 +59,48 @@ export function RESTListner(props) {
     ) => {
       const _restApiUriContent = await getRestApiUriContent(
         _restChainCallParams?.restApiUri,
+        _restChainCallParams.callbackFn,
       );
       setRestApiUriContent(_restApiUriContent.data);
       const _axiosConfig = buildRestAxiosConfig(_restApiUriContent.data);
-      const _restResponse = await getRestResponse(_axiosConfig);
+      const _restResponse = await getRestResponse(
+        _axiosConfig,
+        _restChainCallParams.callbackFn,
+      );
       setResponse(_restResponse.data);
       let _restCallResponseIpfs = undefined;
 
       if (returnValues?.fnType === 'twoway') {
-        const ipfsRestResponse = await createIpfsResponse(_restResponse.data);
+        const ipfsRestResponse = await ipfsAddWithLog(
+          _restResponse.data,
+          _restChainCallParams.callbackFn,
+        );
         _restCallResponseIpfs = [ipfsRestResponse];
       }
       // Se oneway non esiste ipfs quindi viene passato undefined altrimenti si calcola
-      signTransaction(
+      const _sign = await signTransaction(
         _contractAddress,
         returnValues.callbackFn,
         _restCallResponseIpfs,
       );
+      return _sign;
     };
 
-    console.log(
-      '[REST Listner] callRESTMethod',
-      JSON.stringify(props.event, null, 2),
-    );
+    // console.log(
+    //   '[REST Listner] callRESTMethod',
+    //   JSON.stringify(props.event, null, 2),
+    // );
     const returnValues = props?.event?.returnValues;
 
     if (returnValues) {
-      handleRestchainCallback(returnValues, props.event.address);
+      const startTime = new Date();
+      handleRestchainCallback(returnValues, props.event.address).then((r) => {
+        const endTime = new Date();
+        console.log(
+          `[GLOBAL RESTCHAIN CALLBACK ] (${returnValues.callbackFn}) elapsedTime`,
+          endTime - startTime,
+        );
+      });
     }
   }, [props.event]);
 

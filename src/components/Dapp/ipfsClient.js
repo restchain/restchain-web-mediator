@@ -14,11 +14,25 @@ export const ipfsAdd = async (data) => {
 export async function createIpfsResponse(data) {
   const buffer = Buffer.from(JSON.stringify(data));
   try {
-    return await await ipfsAdd(buffer);
+    return await ipfsAdd(buffer);
   } catch (err) {
     console.error('createIpfsResponse error:', JSON.stringify(err));
   }
 }
+
+export async function ipfsAddWithLog(data, text) {
+  const buffer = Buffer.from(JSON.stringify(data));
+  const startTime = new Date();
+  try {
+    const resp = await ipfsAdd(buffer);
+    const endTime = new Date();
+    console.log(`[IPFS ADD] (${text}) - ElapsedTime: ${endTime - startTime} `);
+    return resp;
+  } catch (err) {
+    console.error('createIpfsResponse error:', JSON.stringify(err));
+  }
+}
+
 /**
  * usage
  *
