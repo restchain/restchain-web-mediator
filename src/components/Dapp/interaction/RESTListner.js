@@ -1,95 +1,102 @@
-import React, {useState} from "react";
-import {Card} from "antd";
-import {ipfsAdd, ipfsRead} from "../ipfsClient";
-import axios from "axios";
-import {signTransaction} from "../signTransaction";
+import React, { useState } from 'react';
+import { Card } from 'antd';
+import { createIpfsResponse, ipfsAdd, ipfsRead } from '../ipfsClient';
+import axios from 'axios';
+import { signTransaction } from '../signTransaction';
 
 function buildRestAxiosConfig(restApiUriContent) {
-    console.log("[buildRestAxiosConfig]", restApiUriContent)
-    return {
-        method: restApiUriContent?.method,
-        url: restApiUriContent?.url,
-        params: restApiUriContent?.params,
-        data: restApiUriContent?.data,
-    };
+  console.log('[buildRestAxiosConfig]', restApiUriContent);
+  return {
+    method: restApiUriContent?.method,
+    url: restApiUriContent?.url,
+    params: restApiUriContent?.params,
+    data: restApiUriContent?.data,
+  };
 }
 
 const getRestApiUriContent = async (ipfsId) => {
-    try {
-        return await ipfsRead(ipfsId)
-    } catch (err) {
-        console.error("getApiUriContent error:", JSON.stringify(err))
-    }
-}
+  try {
+    return await ipfsRead(ipfsId);
+  } catch (err) {
+    console.error('getApiUriContent error:', JSON.stringify(err));
+  }
+};
 
 async function getRestResponse(axiosConfig) {
-    try {
-        return await axios(axiosConfig)
-    } catch (err) {
-        console.error("getApiUriContent error:", JSON.stringify(err))
-    }
-}
-
-async function createIpfsResponse(data) {
-    const buffer = Buffer.from(JSON.stringify(data))
-    try {
-        return await await ipfsAdd(buffer)
-    } catch (err) {
-        console.error("createIpfsResponse error:", JSON.stringify(err))
-    }
+  try {
+    return await axios(axiosConfig);
+  } catch (err) {
+    console.error('getApiUriContent error:', JSON.stringify(err));
+  }
 }
 
 export function RESTListner(props) {
-    const [restApiUriContent, setRestApiUriContent] = useState()
-    const [response, setResponse] = useState()
+  const [restApiUriContent, setRestApiUriContent] = useState();
+  const [response, setResponse] = useState();
 
-    React.useEffect(() => {
+  React.useEffect(() => {
+    // Estrarre returnValues (che contiene le informazioni, per invocare il REST, capire se  è onway|twoway, e sapere il metodo con cui rientrare nella blockchain )
+    // Estrarre restApiUri da returnValues e decodificare il contenuto per costruire axiosConfig
+    // Invocare AxiosConfig (quindi chiamare l'URL che era specificato nel messaggio blockchain )  e recuperare la Response
+    // Creare IPFS con il contenuto delle Response
+    // Inviare la risposta alla blockchain differenziando comportamento se oneway o twoway
 
-            // Estrarre returnValues (che contiene le informazioni, per invocare il REST, capire se  è onway|twoway, e sapere il metodo con cui rientrare nella blockchain )
-            // Estrarre restApiUri da returnValues e decodificare il contenuto per costruire axiosConfig
-            // Invocare AxiosConfig (quindi chiamare l'URL che era specificato nel messaggio blockchain )  e recuperare la Response
-            // Creare IPFS con il contenuto delle Response
-            // Inviare la risposta alla blockchain differenziando comportamento se oneway o twoway
+    const handleRestchainCallback = async (
+      _restChainCallParams,
+      _contractAddress,
+    ) => {
+      const _restApiUriContent = await getRestApiUriContent(
+        _restChainCallParams?.restApiUri,
+      );
+      setRestApiUriContent(_restApiUriContent.data);
+      const _axiosConfig = buildRestAxiosConfig(_restApiUriContent.data);
+      const _restResponse = await getRestResponse(_axiosConfig);
+      setResponse(_restResponse.data);
+      let _restCallResponseIpfs = undefined;
 
-            const handleRestchainCallback = async (_restChainCallParams, _contractAddress) => {
-                const _restApiUriContent = await getRestApiUriContent(_restChainCallParams?.restApiUri)
-                setRestApiUriContent(_restApiUriContent.data)
-                const _axiosConfig = buildRestAxiosConfig(_restApiUriContent.data)
-                const _restResponse = await getRestResponse(_axiosConfig)
-                setResponse(_restResponse.data)
-                let _restCallResponseIpfs = undefined
+      if (returnValues?.fnType === 'twoway') {
+        const ipfsRestResponse = await createIpfsResponse(_restResponse.data);
+        _restCallResponseIpfs = [ipfsRestResponse];
+      }
+      // Se oneway non esiste ipfs quindi viene passato undefined altrimenti si calcola
+      signTransaction(
+        _contractAddress,
+        returnValues.callbackFn,
+        _restCallResponseIpfs,
+      );
+    };
 
-                if (returnValues?.fnType === 'twoway') {
-                    const ipfsRestResponse = await createIpfsResponse(_restResponse.data)
-                    _restCallResponseIpfs = [ipfsRestResponse]
-                }
-                // Se oneway non esiste ipfs quindi viene passato undefined altrimenti si calcola
-                signTransaction(_contractAddress, returnValues.callbackFn, _restCallResponseIpfs)
-            }
+    console.log(
+      '[REST Listner] callRESTMethod',
+      JSON.stringify(props.event, null, 2),
+    );
+    const returnValues = props?.event?.returnValues;
 
-            console.log("[REST Listner] callRESTMethod", JSON.stringify(props.event, null, 2))
-            const returnValues = props?.event?.returnValues;
+    if (returnValues) {
+      handleRestchainCallback(returnValues, props.event.address);
+    }
+  }, [props.event]);
 
-            if (returnValues) {
-                handleRestchainCallback(returnValues, props.event.address)
-            }
-        }, [props.event]
-    )
-
-    return (
-        <div style={{paddingLeft: '10%', paddingRight: '10%', marginTop: 20, marginBottom: 20}}>
-            <Card title="Last REST call">
-                <p>
-                    <div>
-                        <div>RetVal:{JSON.stringify(restApiUriContent)}</div>
-                        <b>Response:</b> {JSON.stringify(JSON.stringify(response))}
-                    </div>
-                </p>
-            </Card>
-        </div>
-    )
+  return (
+    <div
+      style={{
+        paddingLeft: '10%',
+        paddingRight: '10%',
+        marginTop: 20,
+        marginBottom: 20,
+      }}
+    >
+      <Card title="Last REST call">
+        <p>
+          <div>
+            <div>RetVal:{JSON.stringify(restApiUriContent)}</div>
+            <b>Response:</b> {JSON.stringify(JSON.stringify(response))}
+          </div>
+        </p>
+      </Card>
+    </div>
+  );
 }
-
 
 /**
  * [REST Listner] listen {

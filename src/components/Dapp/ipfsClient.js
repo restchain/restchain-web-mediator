@@ -1,17 +1,24 @@
-import axios from "axios";
-import {ipfsMini} from "../../ipfs";
+import axios from 'axios';
+import { ipfsMini } from '../../ipfs';
 
-const ipfsUrl = "http://127.0.0.1:5001"
+const ipfsUrl = 'http://127.0.0.1:5001';
 
 export const ipfsRead = async (id) => {
-    return axios.post(`${ipfsUrl}/api/v0/cat/${id}`)
+  return axios.post(`${ipfsUrl}/api/v0/cat/${id}`);
 };
 
 export const ipfsAdd = async (data) => {
-    return ipfsMini.add(data)
+  return ipfsMini.add(data);
+};
+
+export async function createIpfsResponse(data) {
+  const buffer = Buffer.from(JSON.stringify(data));
+  try {
+    return await await ipfsAdd(buffer);
+  } catch (err) {
+    console.error('createIpfsResponse error:', JSON.stringify(err));
+  }
 }
-
-
 /**
  * usage
  *
