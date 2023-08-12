@@ -4,6 +4,8 @@ import {find} from "lodash";
 import {Button, Divider, Form, Input, InputNumber, notification, Switch, Tag} from "antd";
 import {IPFSForm} from "./IpfsForm";
 import WrappedDynamicFieldDomainSet from "./DynamicFieldDomainSet";
+import {signTransaction} from "../signTransaction";
+import {ipfsRead} from "../ipfsClient";
 
 /***
  *
@@ -21,49 +23,49 @@ import WrappedDynamicFieldDomainSet from "./DynamicFieldDomainSet";
 
 const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, viewer}) => {
 
-    console.log("Callback FunctionForm props", sid, contract, web3, canvas, viewer)
     const _sid = sid.toString().replace("_resp", "");
 
-    //console.log("Real Current ", sid)
-    //console.log("Fixed Current ", find(solidityFunctions, {'id': _sid}))
     const elements = viewer.get('elementRegistry');
     const element = elements._elements[_sid];
-    //console.log("elements ", elements)
-    //console.log("element ", element)
-    //console.log("parent ", element.element.parent)
-    //console.log("parent ", element.element.parent)
-    //console.log("incoming ", element.element.incoming)
-    //console.log("_jsonInterface ", contract._jsonInterface);
-
-
     const [state, setState] =
         useState({response: null});
     const [lastId, setLastId] = useState();
     const [ipfsId, setIpfsId] = useState();
-    const ipfsContent = useIpfsCall(ipfsId);
+    const [ipfsContent, setIpfsContent] = useState();
 
-    // const current = find(solidityFunctions, {'id': ID});
     const normalizedId = _sid.replace(/-/g, '_');
-    // console.log("OOOOPS ", contract._jsonInterface, normalizedId)
     const currentElement = find(contract._jsonInterface, {'name': normalizedId});
-    // console.log("FunctionForm currentElement", currentElement);
-    // const dictionary = find(functionsDictionary, {'id': _sid});
-    // const _current = find(contract._jsonInterface,{''})
     const amount = 11;
     // console.log("ID ", _sid)
     // const inputs
 
-    const callFunction = async (_props) => {
-        // console.log("callFunction ", _props);
+
+    useEffect(() => {
+        async function getIpfs(id) {
+            const resp = await ipfsRead(id)
+            setIpfsContent(resp.data)
+        }
+
+        if (ipfsId) {
+            getIpfs(ipfsId)
+        }
+    }, [ipfsId])
+
+    const callBlockchainMethod = async (_props) => {
+        console.log("callFunction ", _props);
         const inputs = []
         const sortedProps = Object.keys(_props).sort().forEach(key => inputs.push(_props[key]))
         const startTime = new Date();
-        console.log("** [TIME REQ ("+normalizedId+")]:", startTime);
+        console.log("** [TIME REQ (" + normalizedId + ")]:", startTime);
+
+
         //console.log("callFunction  Object.values(_props)", inputs, account);
-        contract.methods[`${normalizedId}`].apply(this, inputs).send({
-            // contract.methods._sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
-            from: account
-        }).then((result) => {
+        // contract.methods[`${normalizedId}`].apply(this, inputs).send({
+        //     // contract.methods._sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
+        //     from: account
+        // })
+        //
+        signTransaction(contract._address, normalizedId, inputs).then((result) => {
             // console.log("callFunction result ", JSON.stringify(result));         ù
             const endTime = new Date();
             console.log("** [TIME REQ  (" + normalizedId + ")]:", endTime);
@@ -75,6 +77,7 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
             callBack();
 
         }).catch(function (err, jj) {
+            console.error("callFunction", JSON.stringify(err, null, 2))
             notification['error']({
                 message: 'Transaction error' + jj,
                 description: JSON.stringify(err)
@@ -86,12 +89,15 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
     const callPayableFunction = async (_props) => {
         var newAmount = web3.utils.toWei(11, 'ether');
         const startTime = new Date();
-        console.log("** [TIME REQ  ("+normalizedId+")]:", startTime);
-        contract.methods[`${normalizedId}`].apply(this, Object.values(_props)).send({
-            // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
-            from: account,
-            value: newAmount
-        }).then((result) => {
+        console.log("** [TIME REQ  (" + normalizedId + ")]:", startTime);
+
+        // contract.methods[`${normalizedId}`].apply(this, Object.values(_props)).send({
+        //     // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
+        //     from: account,
+        //     value: newAmount
+        // })
+
+        signTransaction(contract._address, normalizedId, Object.values(_props)).then((result) => {
             const endTime = new Date();
             console.log("** [TIME REQ  (" + normalizedId + ")]:", endTime);
             console.log("** [TIME REQ  (" + normalizedId + ")] - Elapsed Time :", endTime - startTime);
@@ -103,6 +109,7 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
             callBack();
 
         }).catch(function (err) {
+            console.error("callPayableFunction err", JSON.stringify(err, null, 2))
             notification['error']({
                 message: 'Transaction error',
                 description: JSON.stringify(err)
@@ -113,19 +120,14 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
 
     const handleSubmit = e => {
         e.preventDefault();
-        //console.log("Sumbmitt! ",)
         form.validateFields((err, values) => {
             if (!err) {
-                //console.log('Received values of form: ', values);
-                //console.log('Received values of form: ', Object.values(values));
                 if (currentElement.payble) {
                     callPayableFunction(values);
                 } else {
                     const fixedValues = values;
                     delete fixedValues['_keys'];
-
-                    //console.log(" fixedValues", fixedValues)
-                    callFunction(values);
+                    callBlockchainMethod(values);
                 }
 
             }
@@ -226,7 +228,7 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
                                     // Se non esiste IpfsID mostra Form di craezione IPFS
                                     return (
                                         <div key={index}>
-                                            <IPFSForm onOk={(value) => setIpfsId(value)}/>
+                                            <IPFSForm onOk={(value) => value && setIpfsId(value)}/>
                                         </div>
                                     )
                                 }
@@ -246,7 +248,8 @@ const FunctionForm = ({sid, contract, web3, account, form, callBack, canvas, vie
             {/*<Form.Item>*/}
             {/*<Button htmlType="submit" type='primary' disabled={!isParticipantAllowed()}>Send</Button>*/}
             <Divider/>
-            <div style={{textAlign: 'center'}}><Button htmlType="submit" type='primary'>Send</Button></div>
+            <div style={{textAlign: 'center'}}><Button htmlType="submit" type='primary'
+                                                       disabled={!ipfsContent}>Send</Button></div>
             {/*</Form.Item>*/}
         </Form>
     </div>

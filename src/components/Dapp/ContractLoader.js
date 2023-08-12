@@ -12,6 +12,10 @@ import {RESTListner} from "./interaction/RESTListner";
 const ContractLoader = (props) => {
     const [state, setState] = useState({web3: null, accounts: null, contract: null, currentState: null});
     const {modelFetch, refreshModel} = props
+    const [signature,setSignature ] = React.useState()
+    const [event,setEvent ] = React.useState()
+    const [callRESTMEthodEvent,setCallRESTMEthodEvent ] = React.useState()
+
 
     useEffect(() => {
         const init = async () => {
@@ -26,7 +30,9 @@ const ContractLoader = (props) => {
                     // accounts[0]
                 );
                 setState({web3, accounts, contract});
-                console.log("A ",)
+
+                eventListener(contract)
+
             } catch (error) {
                 alert(
                     `Failed to load web3, accounts, or contract.
@@ -34,10 +40,44 @@ const ContractLoader = (props) => {
                 )
                 console.error(error);
             }
+
+
         }
+
+
+        const eventListener = async (contract) => {
+
+            contract && contract.events.allEvents({
+                fromBlock: 'latest',
+            }, function (error, event) {
+
+
+                if (error)
+                    alert("error while subscribing to event")
+                if (event) {
+                    setEvent(event);
+                    console.debug("[Event] - ", event.event, event.returnValues)
+                    if (event.event === "stateChanged") {
+                        // setEventSign(event.signature);
+                        console.log("[STATECHANGE] event", JSON.stringify(event, null, 2))
+                    }
+                    if (event.event === "callRESTMethod") {
+                        console.log("[callRESTMethod] event", JSON.stringify(event, null, 2))
+                        setSignature(event.signature)
+                        // restCaller(event.returnValues);
+                        // setEventSign(event.signature);
+                        setCallRESTMEthodEvent(event);
+                        // setRestMethod(event.returnValues);
+                    }
+                }
+            })
+        }
+
+
         init();
 
     }, [modelFetch.fulfilled]);
+
 
 
     if (modelFetch.pending) {
@@ -50,8 +90,8 @@ const ContractLoader = (props) => {
                 <UserView accounts={state.accounts}/>
                 <SubscribeAsOptional {...state}/>
                 <ContractInfo {...modelFetch.value}/>
-                <BPMNModelProcessor {...modelFetch.value} {...state}/>
-                <RESTListner {...modelFetch.value} {...state}/>
+                <BPMNModelProcessor {...modelFetch.value} {...state} event={event}/>
+                <RESTListner {...modelFetch.value} {...state} signature={signature} event={callRESTMEthodEvent}/>
                 <SmartContractCodeViewer {...modelFetch.value} />
             </div>)
     }

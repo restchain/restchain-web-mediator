@@ -3,7 +3,7 @@ import React from "react";
 import {Redirect} from "react-router-dom";
 
 axios.interceptors.response.use((response) => {
-    console.log("rr ",response)
+    // console.log("rr ",response)
     return response;
 }, (error) => {
 

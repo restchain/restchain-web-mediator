@@ -10,7 +10,7 @@ import {Tag} from "antd";
  */
 
 export function CurrentStateView(props) {
-    console.log("STATE STATUS => ", props)
+    // console.log("STATE STATUS => ", props)
     // const inputs = props.currentCall.inputs.map(a => a.name);
     // const outputs = props.currentCall.outputs.map(a => a.name);
 

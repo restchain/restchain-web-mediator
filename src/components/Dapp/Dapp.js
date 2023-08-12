@@ -3,13 +3,9 @@ import {Spin} from "antd";
 import {connect} from 'react-refetch'
 import ContractList from "./ContractList";
 
-
-
 const Dapp = (props) => {
 
     const {modelFetch, refreshModel} = props
-
-
 
     if (modelFetch.pending) {
         return <Spin/>
@@ -36,11 +32,10 @@ const Description = (accounts) => {
 }
 
 
-
 export default connect(props => {
     const url = "/api2/contract/listImpl"
     return {
-    modelFetch: url,
+        modelFetch: url,
         refreshModel: () => ({
             modelFetch: {
                 url,

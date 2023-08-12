@@ -1,11 +1,9 @@
-import WrappedDynamicFieldDomainSet from "./DynamicFieldDomainSet";
-import {Button, Input, InputNumber, Select, Spin, Switch} from "antd";
+import {Button, Input, Select, Spin} from "antd";
 import React, {useState} from "react";
 import {isEmpty} from "lodash";
-import {ipfsMini} from "../../../ipfs";
+import {ipfsAdd} from "../ipfsClient";
+
 const {TextArea} = Input;
-
-
 
 export function IPFSForm({onOk}) {
     const [paramsValue, setParamsValue] = useState({});
@@ -17,33 +15,22 @@ export function IPFSForm({onOk}) {
     const [res, setRes] = useState(false);
 
 
-    // const handleAdd = async () => {
-    //     setLoading(true)
-    //     const cid = await IPFS.add(value);
-    //     console.log("IPFS cid:", cid);
-    //     setCid(cid.path);
-    //     setLoading(false);
-    //     // load(cid.path).then((v)=>{
-    //     //     console.log("arilog v",v)
-    //     //     setRes(v)
-    //     // });
-    // };
-    //
-    const handleAdd = async () => {
+    const handleAdd = () => {
         //console.log("method ", methodValue)
         setLoading(true)
         const value = {
             url: urlValue,
             method: methodValue,
-            params: !isEmpty(paramsValue)?JSON.parse(paramsValue): {},
+            params: !isEmpty(paramsValue) ? JSON.parse(paramsValue) : {},
             // data: dataValue ? JSON.parse(dataValue) : undefined,
         }
-        ipfsMini.add(Buffer.from(JSON.stringify(value))).then((response) => {
-            setCid(response);
-            ipfsMini.cat(response).then((lr) => setRes(lr))
+        const buffer = Buffer.from(JSON.stringify(value))
+        ipfsAdd(buffer).then((response) => {
+            setRes(JSON.stringify(value))
+            setCid(response)
             setLoading(false);
             onOk(response);
-        });
+        })
     };
 
     const handleCancel = () => {
@@ -80,15 +67,15 @@ export function IPFSForm({onOk}) {
                     placeholder={'{ "para1": "string_value", "para2" : number_value, "para3": { "p1" : "string_value" }'}
                     onChange={(e) => setParamsValue(e.target.value)}
                 />
-                { (methodValue === 'post' || methodValue === 'put') &&
-                <>
-                    <div><strong>Data (POST, PUT):</strong></div>
-                    <TextArea
-                        rows={5}
-                        placeholder={'{ "para1": "string_value", "para2" : number_value, "para3": { "p1" : "string_value" }'}
-                        onChange={(e) => setDataValue(e.target.value)}
-                    />
-                </>
+                {(methodValue === 'post' || methodValue === 'put') &&
+                    <>
+                        <div><strong>Data (POST, PUT):</strong></div>
+                        <TextArea
+                            rows={5}
+                            placeholder={'{ "para1": "string_value", "para2" : number_value, "para3": { "p1" : "string_value" }'}
+                            onChange={(e) => setDataValue(e.target.value)}
+                        />
+                    </>
                 }
                 <div style={{marginTop: '5px', textAlign: "center"}}>
                     <Button onClick={() => handleAdd()} type={"primary"}>Create IPFS</Button>
