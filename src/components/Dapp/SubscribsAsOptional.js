@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {Button, Input, notification, Select} from "antd";
 
 function SubscribeAsOptional(props) {
-    console.log(" SubscribeAsOptional props", props)
+    // console.log(" SubscribeAsOptional props", props)
     const [state, setState] =
         useState({value: 'Participant 1'});
     const {sid, contract, web3, accounts} = props;
@@ -10,7 +10,7 @@ function SubscribeAsOptional(props) {
 
 
     const callFunction = async (_props) => {
-        console.log("callFunction ", state);
+        // console.log("callFunction ", state);
         contract.methods[`subscribe_as_participant`].apply(this, Object.values(state)).send({
             // contract.methods.sid_00e1b46c_e485_4551_a17b_6f0c3f21ec2c('car').send({
             from: accounts[0],
